@@ -1,0 +1,59 @@
+version: "3"
+services:
+  web_server:
+    build: ./nginx  
+    container_name: nginx
+    networks:
+        - new
+    #links:
+    #    - php:php72
+    depends_on:
+        - php    
+    ports:
+        - "82:80"
+        - "443:443"
+    volumes:
+        - ./nginx/www/html:/var/www/html
+        - ./nginx/conf.d:/etc/nginx/conf.d  
+
+  db_server:
+    build: ./mysql  
+    container_name: mysql57
+    networks:
+        - new
+
+    environment:
+        MYSQL_ROOT_PASSWORD: 123456
+    ports:
+        - "3308:3306"
+    volumes:
+        - ./mysql/data:/var/lib/mysql
+
+  php:
+    build: ./phpfpm  
+    container_name: php72
+    networks:
+        - new
+    #links:
+    #    - db_server:mysql57
+    depends_on:
+        - db_server 
+    ports:
+        - "9000:9000"
+    volumes:
+        - ./nginx/www/html:/var/www/html
+        - ./nginx/conf.d:/etc/nginx/conf.d
+  phpmyadmin:
+    image: myphpadmin_image
+    container_name: myphpmyadmin
+    build: ./phpmyadmin
+    networks:
+        - new
+    depends_on:
+        - web_server 
+    ports: 
+        - "8080:80" # phpmyadmin默认监听80
+    environment:
+        PMA_HOST: db_server
+networks:
+  new:
